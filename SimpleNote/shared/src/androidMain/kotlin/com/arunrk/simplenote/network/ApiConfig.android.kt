@@ -11,7 +11,7 @@ import io.ktor.client.engine.okhttp.OkHttp
  * On a physical device, override this with the host's LAN address when creating the Koin
  * module — see the README.
  */
-actual fun defaultBaseUrl(): String = "http://10.0.2.2:8080"
+actual fun defaultBaseUrl(): String = "http://192.168.0.126:8080"
 
 actual fun createPlatformHttpClient(block: HttpClientConfig<*>.() -> Unit): HttpClient =
     HttpClient(OkHttp) { block() }
