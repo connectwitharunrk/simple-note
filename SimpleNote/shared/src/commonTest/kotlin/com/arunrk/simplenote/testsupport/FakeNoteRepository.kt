@@ -6,6 +6,7 @@ import com.arunrk.simplenote.domain.model.Note
 import com.arunrk.simplenote.domain.model.NoteDraft
 import com.arunrk.simplenote.domain.model.NoteFilter
 import com.arunrk.simplenote.domain.repository.NoteRepository
+import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
@@ -26,6 +27,15 @@ class FakeNoteRepository(
 
     /** When set, the next repository call fails with this error and then clears it. */
     var nextError: AppError? = null
+
+    /**
+     * Makes every call take this long in virtual time.
+     *
+     * Needed to observe in-between states: with an instantly-returning fake, a ViewModel's
+     * "loading" phase begins and ends within a single dispatch, so a test could never catch
+     * the spinner it is supposed to be asserting on.
+     */
+    var responseDelayMillis: Long = 0
 
     /** Records every call, so tests can assert what was asked of the repository. */
     val calls = mutableListOf<String>()
@@ -90,14 +100,16 @@ class FakeNoteRepository(
 
     private fun advance(): Instant = clock.plus(1.minutes).also { clock = it }
 
-    private fun <T> respond(call: String, produce: () -> T): AppResult<T> {
+    private suspend fun <T> respond(call: String, produce: () -> T): AppResult<T> {
         calls += call
+        if (responseDelayMillis > 0) delay(responseDelayMillis)
         consumeError()?.let { return AppResult.Failure(it) }
         return AppResult.Success(produce())
     }
 
-    private fun <T> respondOrNotFound(call: String, produce: () -> T?): AppResult<T> {
+    private suspend fun <T> respondOrNotFound(call: String, produce: () -> T?): AppResult<T> {
         calls += call
+        if (responseDelayMillis > 0) delay(responseDelayMillis)
         consumeError()?.let { return AppResult.Failure(it) }
         val produced = produce() ?: return AppResult.Failure(AppError.NotFound("Note not found"))
         return AppResult.Success(produced)
