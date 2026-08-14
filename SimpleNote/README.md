@@ -1,35 +1,37 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Desktop (JVM).
+# Simple Note — Kotlin Multiplatform client
 
-* [/iosApp](./iosApp/iosApp) contains an iOS application. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+This is the client half of the project. **See the [root README](../README.md)** for setup,
+architecture, the API reference and testing instructions.
 
-* [/shared](./shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./shared/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./shared/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./shared/src/jvmMain/kotlin)
-    folder is the appropriate location.
+## Targets
 
-### Running the apps
+| Target | Source set | Ktor engine | Default backend URL |
+|---|---|---|---|
+| Android | `androidMain` | OkHttp | `http://10.0.2.2:8080` |
+| iOS (arm64, simulator arm64) | `iosMain` | Darwin | `http://localhost:8080` |
+| Desktop (JVM) | `jvmMain` | OkHttp | `http://localhost:8080` |
 
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and options:
+Shared code lives in [`shared/src/commonMain`](./shared/src/commonMain/kotlin) — models, use
+cases, networking, MVI stores and the entire Compose UI. Platform source sets contain only
+what genuinely differs: the HTTP engine, the default base URL, and each platform's entry point.
 
-- Android app: `./gradlew :androidApp:assembleDebug`
-- Desktop app:
-  - Hot reload: `./gradlew :desktopApp:hotRun --auto`
-  - Standard run: `./gradlew :desktopApp:run`
-- iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+## Running
 
-### Running tests
+Start the backend first (`cd ../note-backend && ./gradlew bootRun`), then:
 
-Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
+```bash
+./gradlew :desktopApp:run           # Desktop
+./gradlew :androidApp:installDebug  # Android
+```
 
-- Android tests: `./gradlew :shared:testAndroidHostTest`
-- Desktop tests: `./gradlew :shared:jvmTest`
-- iOS tests: `./gradlew :shared:iosSimulatorArm64Test`
+iOS: open [`iosApp/iosApp.xcodeproj`](./iosApp) in Xcode. Requires a Mac.
 
----
+## Tests
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+```bash
+./gradlew :shared:jvmTest    # fastest — runs the shared suite on the JVM
+./gradlew :shared:allTests   # every target available on this host
+```
+
+`iosSimulatorArm64Test` is reported as disabled on non-macOS hosts; simulator tests require
+macOS.
