@@ -159,6 +159,9 @@ simple-note/
 
 ## Getting started
 
+> Prefer a formatted, step-by-step version with copyable commands and a troubleshooting
+> section? Open **[`RUNNING.html`](RUNNING.html)** in a browser.
+
 ### Prerequisites
 
 - **JDK 17+**

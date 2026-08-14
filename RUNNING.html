@@ -1,0 +1,1071 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Setup guide for the Simple Note database, Spring Boot backend and Kotlin Multiplatform client.">
+<title>Running Simple Note</title>
+
+<style>
+  /* ---------- tokens: complete light palette on bare :root ---------- */
+  :root {
+    --ground:        #FCFDFB;
+    --surface:       #F2F6F1;
+    --surface-2:     #E7EEE6;
+    --ink:           #16201B;
+    --ink-soft:      #47554D;
+    --ink-faint:     #6E7C74;
+    --rule:          #D6E0D5;
+    --rule-strong:   #B8C7B7;
+    --accent:        #2E6A4F;
+    --accent-soft:   #E0F0E6;
+    --accent-ink:    #1B4632;
+    --warn:          #8A5D0F;
+    --warn-soft:     #FBF0DA;
+    --danger:        #A32219;
+    --term-bg:       #14201A;
+    --term-ink:      #EAF3ED;
+    --term-dim:      #869E92;
+    --term-comment:  #9CB6A8;
+    --term-accent:   #8FD3AC;
+    --shadow:        0 1px 2px rgba(22, 32, 27, .06), 0 8px 24px -12px rgba(22, 32, 27, .18);
+
+    --display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  /* system dark, unless the viewer explicitly chose light */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #101613;
+      --surface:     #172019;
+      --surface-2:   #1E2A23;
+      --ink:         #E3ECE5;
+      --ink-soft:    #AEBDB4;
+      --ink-faint:   #7E8E85;
+      --rule:        #27342C;
+      --rule-strong: #37473D;
+      --accent:      #98D5B2;
+      --accent-soft: #1C2E24;
+      --accent-ink:  #B8E6CB;
+      --warn:        #E0B15F;
+      --warn-soft:   #2B2317;
+      --danger:      #F09189;
+      --term-bg:     #0B120E;
+      --term-ink:    #E4F0E8;
+      --term-dim:    #7E958A;
+      --term-comment: #98B2A5;
+      --term-accent: #8FD3AC;
+      --shadow:      0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
+    }
+  }
+
+  /* explicit dark choice wins over a light OS */
+  :root[data-theme="dark"] {
+    --ground:      #101613;
+    --surface:     #172019;
+    --surface-2:   #1E2A23;
+    --ink:         #E3ECE5;
+    --ink-soft:    #AEBDB4;
+    --ink-faint:   #7E8E85;
+    --rule:        #27342C;
+    --rule-strong: #37473D;
+    --accent:      #98D5B2;
+    --accent-soft: #1C2E24;
+    --accent-ink:  #B8E6CB;
+    --warn:        #E0B15F;
+    --warn-soft:   #2B2317;
+    --danger:      #F09189;
+    --term-bg:     #0B120E;
+    --term-ink:    #E4F0E8;
+    --term-dim:    #7E958A;
+    --term-comment: #98B2A5;
+    --term-accent: #8FD3AC;
+    --shadow:      0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+  }
+
+  /* ---------- masthead ---------- */
+  .masthead {
+    padding: 56px 0 32px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 14px;
+  }
+  .masthead h1 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(2.2rem, 5vw, 3.1rem);
+    line-height: 1.08;
+    letter-spacing: -.015em;
+    text-wrap: balance;
+    margin: 0 0 14px;
+  }
+  .standfirst {
+    max-width: 62ch;
+    margin: 0;
+    font-size: 1.075rem;
+    color: var(--ink-soft);
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 26px;
+    padding: 0;
+    list-style: none;
+  }
+  .chips li {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 5px 11px;
+    border: 1px solid var(--rule-strong);
+    border-radius: 999px;
+    color: var(--ink-soft);
+    background: var(--surface);
+  }
+
+  /* ---------- shell ---------- */
+  .shell {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 48px;
+    padding-top: 44px;
+  }
+  @media (min-width: 1000px) {
+    .shell { grid-template-columns: 210px minmax(0, 1fr); gap: 64px; }
+    .toc { position: sticky; top: 32px; align-self: start; }
+  }
+
+  .toc h2 {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 14px;
+    font-weight: 600;
+  }
+  .toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+  .toc a {
+    display: block;
+    padding: 5px 0;
+    color: var(--ink-soft);
+    text-decoration: none;
+    font-size: 14px;
+    border-left: 2px solid transparent;
+    padding-left: 12px;
+    margin-left: -14px;
+  }
+  .toc a:hover { color: var(--accent); border-left-color: var(--rule-strong); }
+
+  /* ---------- content ---------- */
+  main { min-width: 0; }
+  section { margin-bottom: 60px; scroll-margin-top: 24px; }
+
+  h2.head {
+    font-family: var(--display);
+    font-size: 1.72rem;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+    margin: 0 0 10px;
+  }
+  h3 {
+    font-family: var(--body);
+    font-size: 1rem;
+    font-weight: 650;
+    margin: 30px 0 10px;
+    letter-spacing: -.005em;
+  }
+  p { max-width: 68ch; margin: 0 0 16px; }
+  .lede { color: var(--ink-soft); max-width: 66ch; }
+
+  a { color: var(--accent); text-underline-offset: 3px; }
+
+  /* inline code, on the page's own light surface */
+  code {
+    font-family: var(--mono);
+    font-size: .875em;
+    background: var(--surface-2);
+    border-radius: 4px;
+    padding: .12em .38em;
+  }
+
+  /* Inside a terminal block the ground is dark, so the inline-code chrome above must not
+     apply — its light background against light terminal text is unreadable. */
+  .term code {
+    background: none;
+    padding: 0;
+    border-radius: 0;
+    font-size: inherit;
+    color: inherit;
+  }
+
+  /* ---------- numbered stages ---------- */
+  .stage { position: relative; padding-left: 62px; }
+  .stage + .stage { margin-top: 44px; }
+  .stage::before {
+    content: attr(data-step);
+    position: absolute;
+    left: 0; top: -2px;
+    width: 38px; height: 38px;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    border: 1px solid var(--accent);
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  /* spine connecting the stages: the order is load-bearing, not decorative */
+  .stage:not(:last-of-type)::after {
+    content: "";
+    position: absolute;
+    left: 19px; top: 44px; bottom: -44px;
+    width: 1px;
+    background: var(--rule-strong);
+  }
+  @media (max-width: 620px) {
+    .stage { padding-left: 0; }
+    .stage::before { position: static; margin-bottom: 12px; }
+    .stage:not(:last-of-type)::after { display: none; }
+  }
+
+  /* ---------- terminal ---------- */
+  .term {
+    background: var(--term-bg);
+    border-radius: 10px;
+    margin: 0 0 18px;
+    overflow: hidden;
+    border: 1px solid var(--rule);
+  }
+  .term-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 10px 7px 14px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .term-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--term-dim);
+  }
+  .copy {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--term-dim);
+    background: transparent;
+    border: 1px solid rgba(255,255,255,.16);
+    border-radius: 5px;
+    padding: 4px 9px;
+    cursor: pointer;
+  }
+  .copy:hover { color: var(--term-accent); border-color: var(--term-accent); }
+  .term pre {
+    margin: 0;
+    padding: 16px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--term-ink);
+  }
+  .term .p { color: var(--term-accent); user-select: none; }
+  /* Comments are secondary but still have to be read; --term-dim is tuned for the chrome
+     in the title bar, which sits at a larger size and needs less contrast. */
+  .term .c { color: var(--term-comment); }
+
+  /* ---------- tables ---------- */
+  .table-wrap { overflow-x: auto; margin: 0 0 20px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+  th, td {
+    text-align: left;
+    padding: 10px 14px 10px 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  th {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+    border-bottom-color: var(--rule-strong);
+    white-space: nowrap;
+  }
+  td code { white-space: nowrap; }
+
+  /* ---------- callouts ---------- */
+  .note {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    padding: 14px 18px;
+    border-radius: 0 8px 8px 0;
+    margin: 0 0 20px;
+  }
+  .note.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+  .note p { margin: 0; max-width: 62ch; font-size: 15px; }
+  .note p + p { margin-top: 8px; }
+  .note strong { font-weight: 650; }
+
+  /* ---------- tabs ---------- */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--rule);
+    margin: 0 0 22px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    font-family: var(--body);
+    font-size: 14px;
+    font-weight: 550;
+    color: var(--ink-faint);
+    background: transparent;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    padding: 9px 14px;
+    cursor: pointer;
+    margin-bottom: -1px;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+  .panel[hidden] { display: none; }
+
+  /* ---------- troubleshooting ---------- */
+  details {
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    background: var(--surface);
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  summary {
+    cursor: pointer;
+    padding: 13px 16px;
+    font-weight: 550;
+    font-size: 15px;
+    list-style: none;
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::before {
+    content: "+";
+    font-family: var(--mono);
+    color: var(--accent);
+    font-weight: 700;
+    line-height: 1.5;
+  }
+  details[open] summary::before { content: "\2212"; }
+  .details-body { padding: 0 16px 16px 43px; }
+  .details-body p { font-size: 15px; margin-bottom: 12px; }
+  .details-body .term { margin-bottom: 12px; }
+  @media (max-width: 620px) { .details-body { padding-left: 16px; } }
+
+  .symptom {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--danger);
+    display: block;
+    margin-bottom: 10px;
+    word-break: break-word;
+  }
+
+  /* ---------- misc ---------- */
+  .split { display: grid; gap: 20px; }
+  @media (min-width: 760px) { .split { grid-template-columns: 1fr 1fr; gap: 28px; } }
+
+  .card {
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .card h3 { margin-top: 0; }
+  .card p:last-child { margin-bottom: 0; }
+  .card ul { margin: 0; padding-left: 18px; }
+  .card li { margin-bottom: 6px; font-size: 15px; }
+  .card li:last-child { margin-bottom: 0; }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 22px;
+    color: var(--ink-faint);
+    font-size: 14px;
+  }
+  footer p { max-width: 68ch; }
+
+  :where(a, button, summary, .tab):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+</style>
+
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <p class="eyebrow">Setup guide</p>
+    <h1>Running Simple Note</h1>
+    <p class="standfirst">
+      Getting the database, the Spring Boot backend and the Kotlin Multiplatform client running
+      on your machine. Roughly ten minutes, most of it waiting for Gradle.
+    </p>
+    <ul class="chips">
+      <li>Kotlin 2.4.10</li>
+      <li>Spring Boot 4.1</li>
+      <li>Compose Multiplatform 1.11</li>
+      <li>Ktor 3.5</li>
+      <li>MySQL / MariaDB</li>
+    </ul>
+  </header>
+
+  <div class="shell">
+
+    <nav class="toc" aria-label="Contents">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#before">Before you start</a></li>
+        <li><a href="#database">1 &nbsp;Database</a></li>
+        <li><a href="#backend">2 &nbsp;Backend</a></li>
+        <li><a href="#client">3 &nbsp;Client</a></li>
+        <li><a href="#url">Backend URL</a></li>
+        <li><a href="#verify">Check it works</a></li>
+        <li><a href="#tests">Running tests</a></li>
+        <li><a href="#trouble">Troubleshooting</a></li>
+      </ol>
+    </nav>
+
+    <main>
+
+      <section id="before">
+        <h2 class="head">Before you start</h2>
+        <p class="lede">
+          Three things have to be installed. Everything else is fetched by the Gradle wrapper on
+          first run.
+        </p>
+
+        <div class="split">
+          <div class="card">
+            <h3>Required</h3>
+            <ul>
+              <li><strong>JDK 17 or newer</strong> — both projects target 17.</li>
+              <li><strong>MySQL 8 or MariaDB 10.4+</strong> — XAMPP includes MariaDB and phpMyAdmin.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Per platform</h3>
+            <ul>
+              <li><strong>Desktop</strong> — nothing more. Start here.</li>
+              <li><strong>Android</strong> — Android Studio, plus an emulator or a device.</li>
+              <li><strong>iOS</strong> — Xcode, on a Mac.</li>
+            </ul>
+          </div>
+        </div>
+
+        <p style="margin-top:22px">
+          The order below matters. The backend validates its schema against the database at
+          startup and refuses to boot if the table is missing, and the client shows an error
+          state until the backend answers.
+        </p>
+      </section>
+
+      <section id="database">
+        <div class="stage" data-step="1">
+          <h2 class="head">Create the database</h2>
+          <p class="lede">
+            Run <code>note-backend/db/schema.sql</code> once. It creates the
+            <code>simple_note</code> database and the <code>notes</code> table.
+          </p>
+
+          <h3>With phpMyAdmin</h3>
+          <p>
+            Start MySQL from the XAMPP control panel, open
+            <a href="http://localhost/phpmyadmin">localhost/phpmyadmin</a>, select the
+            <strong>SQL</strong> tab, paste the contents of <code>schema.sql</code> and press
+            <strong>Go</strong>.
+          </p>
+
+          <h3>From a terminal</h3>
+          <div class="term">
+            <div class="term-bar">
+              <span class="term-label">shell</span>
+              <button class="copy" type="button">Copy</button>
+            </div>
+<pre><code><span class="p">$</span> mysql -u root -p &lt; note-backend/db/schema.sql</code></pre>
+          </div>
+
+          <p>
+            Want something to look at on first launch? Load the sample notes too:
+            <code>db/seed.sql</code>. It is safe to re-run — it clears the table first.
+          </p>
+
+          <div class="note">
+            <p>
+              <strong>Why a script rather than automatic migration.</strong> The backend runs with
+              <code>ddl-auto=validate</code>, so Hibernate never alters your tables. It compares the
+              entity mapping against the real schema at startup and fails loudly if they have
+              drifted apart.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="backend">
+        <div class="stage" data-step="2">
+          <h2 class="head">Start the backend</h2>
+
+          <div class="term">
+            <div class="term-bar">
+              <span class="term-label">shell</span>
+              <button class="copy" type="button">Copy</button>
+            </div>
+<pre><code><span class="p">$</span> cd note-backend
+<span class="p">$</span> ./gradlew bootRun          <span class="c"># Windows: gradlew.bat bootRun</span></code></pre>
+          </div>
+
+          <p>Wait for the line that confirms it is up:</p>
+
+          <div class="term">
+            <div class="term-bar"><span class="term-label">output</span></div>
+<pre><code>Tomcat started on port 8080 (http) with context path '/'
+Started NoteBackendApplicationKt in 7.517 seconds</code></pre>
+          </div>
+
+          <h3>Configuration</h3>
+          <p>
+            Every setting is an environment variable with a development default, so no credentials
+            live in the source. The defaults match a stock XAMPP install.
+          </p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Variable</th><th>Default</th><th>Notes</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>DB_URL</code></td>
+                  <td><code>jdbc:mariadb://localhost:3306/simple_note</code></td>
+                  <td>Plus <code>?connectionTimeZone=UTC&amp;characterEncoding=utf8</code></td>
+                </tr>
+                <tr><td><code>DB_USERNAME</code></td><td><code>root</code></td><td></td></tr>
+                <tr><td><code>DB_PASSWORD</code></td><td><em>empty</em></td><td>Set this for anything but local XAMPP</td></tr>
+                <tr><td><code>SERVER_PORT</code></td><td><code>8080</code></td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="term">
+            <div class="term-bar">
+              <span class="term-label">shell</span>
+              <button class="copy" type="button">Copy</button>
+            </div>
+<pre><code><span class="p">$</span> DB_PASSWORD=secret ./gradlew bootRun</code></pre>
+          </div>
+
+          <div class="note warn">
+            <p>
+              <strong>On a real MySQL server, change one variable.</strong> XAMPP ships MariaDB even
+              though its control panel says “MySQL”, so the default URL uses the MariaDB driver.
+              Both drivers are on the classpath and the URL scheme picks one:
+            </p>
+            <p><code>DB_URL='jdbc:mysql://localhost:3306/simple_note?connectionTimeZone=UTC'</code></p>
+          </div>
+        </div>
+      </section>
+
+      <section id="client">
+        <div class="stage" data-step="3">
+          <h2 class="head">Run the client</h2>
+          <p class="lede">
+            One shared codebase, three entry points. Leave the backend running in its own terminal.
+          </p>
+
+          <div class="tabs" role="tablist" aria-label="Platform">
+            <button class="tab" role="tab" id="tab-desktop" aria-controls="p-desktop" aria-selected="true">Desktop</button>
+            <button class="tab" role="tab" id="tab-android" aria-controls="p-android" aria-selected="false">Android</button>
+            <button class="tab" role="tab" id="tab-ios" aria-controls="p-ios" aria-selected="false">iOS</button>
+          </div>
+
+          <div class="panel" id="p-desktop" role="tabpanel" aria-labelledby="tab-desktop">
+            <p>The quickest way to see the whole stack working, and the one to try first.</p>
+            <div class="term">
+              <div class="term-bar">
+                <span class="term-label">shell</span>
+                <button class="copy" type="button">Copy</button>
+              </div>
+<pre><code><span class="p">$</span> cd SimpleNote
+<span class="p">$</span> ./gradlew :desktopApp:run</code></pre>
+            </div>
+            <p>
+              The window opens at 1100&times;760, wide enough for the two-pane layout: notes on the
+              left, editor on the right. Drag it narrower than 840dp and it collapses to a single
+              pane — the same behaviour a phone gets.
+            </p>
+          </div>
+
+          <div class="panel" id="p-android" role="tabpanel" aria-labelledby="tab-android" hidden>
+
+            <h3>Build and run in one step</h3>
+            <p>Start an emulator or connect a device with USB debugging enabled, then:</p>
+            <div class="term">
+              <div class="term-bar">
+                <span class="term-label">shell</span>
+                <button class="copy" type="button">Copy</button>
+              </div>
+<pre><code><span class="p">$</span> cd SimpleNote
+<span class="p">$</span> ./gradlew :androidApp:installDebug</code></pre>
+            </div>
+            <p>
+              On an emulator this works with no further setup. On a physical device you must point
+              the app at your machine’s LAN address — see <a href="#url">Backend URL</a> below.
+            </p>
+
+            <h3>Build an APK without installing</h3>
+            <p>Useful for sharing a build or for CI:</p>
+            <div class="term">
+              <div class="term-bar">
+                <span class="term-label">shell</span>
+                <button class="copy" type="button">Copy</button>
+              </div>
+<pre><code><span class="c"># debug — installable straight away</span>
+<span class="p">$</span> ./gradlew :androidApp:assembleDebug
+
+<span class="c"># release APK, and an App Bundle for Play</span>
+<span class="p">$</span> ./gradlew :androidApp:assembleRelease
+<span class="p">$</span> ./gradlew :androidApp:bundleRelease
+
+<span class="c"># everything at once</span>
+<span class="p">$</span> ./gradlew :androidApp:assemble</code></pre>
+            </div>
+
+            <p>What each task leaves behind, under <code>SimpleNote/androidApp/build/outputs/</code>:</p>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Task</th><th>Output</th><th>Size</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>assembleDebug</code></td>
+                    <td><code>apk/debug/androidApp-debug.apk</code></td>
+                    <td>16 MB</td>
+                  </tr>
+                  <tr>
+                    <td><code>assembleRelease</code></td>
+                    <td><code>apk/release/androidApp-release-unsigned.apk</code></td>
+                    <td>12 MB</td>
+                  </tr>
+                  <tr>
+                    <td><code>bundleRelease</code></td>
+                    <td><code>bundle/release/androidApp-release.aab</code></td>
+                    <td>11 MB</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p>Install an APK you have already built:</p>
+            <div class="term">
+              <div class="term-bar">
+                <span class="term-label">shell</span>
+                <button class="copy" type="button">Copy</button>
+              </div>
+<pre><code><span class="p">$</span> adb install -r androidApp/build/outputs/apk/debug/androidApp-debug.apk</code></pre>
+            </div>
+
+            <div class="note warn">
+              <p>
+                <strong>Release builds are unsigned</strong> — the filename says so. This project
+                has no signing config, so <code>androidApp-release-unsigned.apk</code> will not
+                install on a device and the bundle cannot be uploaded to Play as-is.
+              </p>
+              <p>
+                To produce an installable release build, add a <code>signingConfigs</code> block to
+                <code>androidApp/build.gradle.kts</code> and reference it from the
+                <code>release</code> build type. Keep the keystore and its passwords out of version
+                control — read them from environment variables or <code>local.properties</code>,
+                the same way the backend reads its database credentials.
+              </p>
+            </div>
+
+            <h3>Clean rebuild</h3>
+            <p>If a build starts behaving oddly after switching branches:</p>
+            <div class="term">
+              <div class="term-bar">
+                <span class="term-label">shell</span>
+                <button class="copy" type="button">Copy</button>
+              </div>
+<pre><code><span class="p">$</span> ./gradlew clean :androidApp:assembleDebug</code></pre>
+            </div>
+          </div>
+
+          <div class="panel" id="p-ios" role="tabpanel" aria-labelledby="tab-ios" hidden>
+            <p>Open the Xcode project and press Run:</p>
+            <div class="term">
+              <div class="term-bar">
+                <span class="term-label">shell</span>
+                <button class="copy" type="button">Copy</button>
+              </div>
+<pre><code><span class="p">$</span> open SimpleNote/iosApp/iosApp.xcodeproj</code></pre>
+            </div>
+            <div class="note warn">
+              <p>
+                <strong>Not yet run on a device or simulator.</strong> This project was built on
+                Windows. Both iOS targets compile and the source sets follow standard KMP
+                conventions, but the app has never been launched — expect to fix small Xcode-side
+                issues on the first build.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="url">
+        <h2 class="head">Pointing the client somewhere else</h2>
+        <p class="lede">
+          Each platform has a default that works for local development.
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Platform</th><th>Default</th><th>Why</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Android emulator</td>
+                <td><code>http://10.0.2.2:8080</code></td>
+                <td>The emulator’s alias for your machine’s loopback. Inside the emulator, <code>localhost</code> is the emulated device itself.</td>
+              </tr>
+              <tr>
+                <td>iOS Simulator</td>
+                <td><code>http://localhost:8080</code></td>
+                <td>The simulator shares the Mac’s network stack.</td>
+              </tr>
+              <tr>
+                <td>Desktop</td>
+                <td><code>http://localhost:8080</code></td>
+                <td>Same machine.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>To use a different server — a physical device on your Wi-Fi, or staging — pass a base URL when Koin starts:</p>
+
+        <div class="term">
+          <div class="term-bar">
+            <span class="term-label">kotlin</span>
+            <button class="copy" type="button">Copy</button>
+          </div>
+<pre><code>initKoin(baseUrl = "http://192.168.1.20:8080")</code></pre>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Platform</th><th>Edit this file</th></tr></thead>
+            <tbody>
+              <tr><td>Android</td><td><code>androidApp/…/NoteApplication.kt</code></td></tr>
+              <tr><td>Desktop</td><td><code>desktopApp/…/main.kt</code></td></tr>
+              <tr><td>iOS</td><td><code>shared/src/iosMain/…/MainViewController.kt</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note warn">
+          <p>
+            <strong>A new address also needs permission to use plain HTTP.</strong> Both platforms
+            block cleartext by default, and this app only opens it for local development hosts
+            rather than switching it off globally. Add your LAN address to
+            <code>androidApp/src/main/res/xml/network_security_config.xml</code> and to the
+            <code>NSExceptionDomains</code> block in <code>iosApp/iosApp/Info.plist</code>.
+          </p>
+        </div>
+      </section>
+
+      <section id="verify">
+        <h2 class="head">Check it works</h2>
+        <p class="lede">With the backend running, four requests confirm the whole path down to the database.</p>
+
+        <div class="term">
+          <div class="term-bar">
+            <span class="term-label">shell</span>
+            <button class="copy" type="button">Copy</button>
+          </div>
+<pre><code><span class="c"># create a note — expect 201 and a Location header</span>
+<span class="p">$</span> curl -i -X POST localhost:8080/api/notes \
+    -H 'Content-Type: application/json' \
+    -d '{"title":"Groceries","content":"Milk, eggs"}'
+
+<span class="c"># list them — pinned first, then most recently updated</span>
+<span class="p">$</span> curl -s localhost:8080/api/notes
+
+<span class="c"># search titles and content</span>
+<span class="p">$</span> curl -s 'localhost:8080/api/notes/search?query=milk'
+
+<span class="c"># a missing note — expect 404 and the error envelope</span>
+<span class="p">$</span> curl -s localhost:8080/api/notes/9999</code></pre>
+        </div>
+
+        <p>That last one should come back as:</p>
+
+        <div class="term">
+          <div class="term-bar"><span class="term-label">json</span></div>
+<pre><code>{
+  "status": 404,
+  "error": "NOTE_NOT_FOUND",
+  "message": "Note not found with id 9999",
+  "path": "/api/notes/9999",
+  "timestamp": "2026-08-14T09:53:56.800718400Z"
+}</code></pre>
+        </div>
+      </section>
+
+      <section id="tests">
+        <h2 class="head">Running the tests</h2>
+        <p class="lede">
+          Neither suite needs a running database or backend — the backend tests use in-memory H2,
+          and the client tests mock the HTTP transport.
+        </p>
+
+        <div class="term">
+          <div class="term-bar">
+            <span class="term-label">shell</span>
+            <button class="copy" type="button">Copy</button>
+          </div>
+<pre><code><span class="p">$</span> cd note-backend &amp;&amp; ./gradlew test          <span class="c"># 84 tests</span>
+<span class="p">$</span> cd SimpleNote &amp;&amp; ./gradlew :shared:jvmTest <span class="c"># 108 tests</span></code></pre>
+        </div>
+
+        <p>
+          <code>./gradlew :shared:allTests</code> runs the shared suite on every target your machine
+          supports. On Windows and Linux, Gradle reports <code>iosSimulatorArm64Test</code> as
+          disabled — simulator tests require macOS.
+        </p>
+      </section>
+
+      <section id="trouble">
+        <h2 class="head">Troubleshooting</h2>
+        <p class="lede">Every one of these came up while building the project.</p>
+
+        <details>
+          <summary>The backend says port 8080 is already in use</summary>
+          <div class="details-body">
+            <span class="symptom">Web server failed to start. Port 8080 was already in use.</span>
+            <p>
+              Usually an earlier <code>bootRun</code> whose JVM outlived the Gradle daemon. Find it
+              and stop it, or start on another port with <code>SERVER_PORT=8081</code>.
+            </p>
+            <div class="term">
+              <div class="term-bar">
+                <span class="term-label">shell</span>
+                <button class="copy" type="button">Copy</button>
+              </div>
+<pre><code><span class="c"># Windows (PowerShell)</span>
+<span class="p">&gt;</span> Get-NetTCPConnection -LocalPort 8080 -State Listen |
+    ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+
+<span class="c"># macOS / Linux</span>
+<span class="p">$</span> lsof -ti:8080 | xargs kill -9</code></pre>
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>Hibernate thinks your database is MySQL 5.5.5</summary>
+          <div class="details-body">
+            <span class="symptom">HHH000511: The 5.5.5 version for [org.hibernate.dialect.MySQLDialect] is no longer supported</span>
+            <p>
+              You are on MariaDB but connecting with the MySQL driver. MariaDB reports its version
+              as <code>5.5.5-10.4.32-MariaDB</code> — that <code>5.5.5-</code> prefix is a legacy
+              compatibility hack, and Connector/J reads it as the actual version. Hibernate then
+              generates SQL for a server from 2010.
+            </p>
+            <p>
+              Use a <code>jdbc:mariadb://</code> URL instead. The driver is already on the
+              classpath, and it is the default.
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>The backend won’t start because the schema doesn’t match</summary>
+          <div class="details-body">
+            <span class="symptom">Schema-validation: missing table [notes]</span>
+            <p>
+              Step 1 has not run, or it ran against a different database. Confirm the table exists
+              and that <code>DB_URL</code> points at the same server phpMyAdmin is showing you.
+            </p>
+            <div class="term">
+              <div class="term-bar">
+                <span class="term-label">shell</span>
+                <button class="copy" type="button">Copy</button>
+              </div>
+<pre><code><span class="p">$</span> mysql -u root -e "SHOW CREATE TABLE simple_note.notes\G"</code></pre>
+            </div>
+            <p>
+              This check is the point of <code>ddl-auto=validate</code>: it fails at startup rather
+              than halfway through a request.
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>The Android app shows “Can’t reach the server”</summary>
+          <div class="details-body">
+            <p>Three things to check, in order:</p>
+            <p>
+              <strong>Is the backend actually running?</strong> Load
+              <code>localhost:8080/api/notes</code> in a browser on your machine first.
+            </p>
+            <p>
+              <strong>On an emulator</strong>, the address must be <code>10.0.2.2</code>, not
+              <code>localhost</code>. That is already the default.
+            </p>
+            <p>
+              <strong>On a physical device</strong>, both the base URL and
+              <code>network_security_config.xml</code> need your machine’s LAN address, and the two
+              devices must be on the same network. See <a href="#url">Backend URL</a>.
+            </p>
+          </div>
+        </details>
+
+        <details>
+          <summary>Gradle fails with a file lock after a cancelled build</summary>
+          <div class="details-body">
+            <span class="symptom">java.io.IOException: Unable to delete directory … test-results</span>
+            <p>
+              A killed test run can leave a JVM holding files open on Windows. Stop the daemons and
+              remove the stale directory.
+            </p>
+            <div class="term">
+              <div class="term-bar">
+                <span class="term-label">shell</span>
+                <button class="copy" type="button">Copy</button>
+              </div>
+<pre><code><span class="p">$</span> ./gradlew --stop
+<span class="p">$</span> rm -rf shared/build/test-results</code></pre>
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>The first build takes several minutes</summary>
+          <div class="details-body">
+            <p>
+              Expected. The Gradle wrapper downloads Gradle itself, then the Kotlin/Native
+              toolchain for the iOS targets — several hundred megabytes on a cold cache. Later
+              builds take seconds.
+            </p>
+          </div>
+        </details>
+      </section>
+
+      <footer>
+        <p>
+          For architecture, the API reference and the design decisions behind all of this, see the
+          project <code>README.md</code> and the records in <code>docs/adr/</code>.
+        </p>
+      </footer>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  // Tabs: platform panels
+  (function () {
+    var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+
+    function select(tab) {
+      tabs.forEach(function (t) {
+        var isTarget = t === tab;
+        t.setAttribute('aria-selected', isTarget ? 'true' : 'false');
+        document.getElementById(t.getAttribute('aria-controls')).hidden = !isTarget;
+      });
+    }
+
+    tabs.forEach(function (tab, i) {
+      tab.addEventListener('click', function () { select(tab); });
+      tab.addEventListener('keydown', function (e) {
+        var next = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : -1;
+        if (next < 0 || next >= tabs.length) return;
+        e.preventDefault();
+        tabs[next].focus();
+        select(tabs[next]);
+      });
+    });
+  })();
+
+  // Copy buttons
+  (function () {
+    document.querySelectorAll('.copy').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var pre = btn.closest('.term').querySelector('pre');
+        // Drop the shell prompt so the pasted command runs as-is.
+        var text = Array.prototype.slice.call(pre.querySelectorAll('code'))
+          .map(function (c) { return c.innerText; })
+          .join('\n')
+          .split('\n')
+          .map(function (line) { return line.replace(/^[$>]\s?/, ''); })
+          .join('\n')
+          .trim();
+
+        var done = function (ok) {
+          btn.textContent = ok ? 'Copied' : 'Select to copy';
+          setTimeout(function () { btn.textContent = 'Copy'; }, 1800);
+        };
+
+        try {
+          navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+        } catch (e) {
+          done(false);
+        }
+      });
+    });
+  })();
+</script>
+</body>
+</html>
