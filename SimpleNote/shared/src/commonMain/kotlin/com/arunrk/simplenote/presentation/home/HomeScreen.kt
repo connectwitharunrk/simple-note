@@ -105,6 +105,20 @@ fun HomeScreen(modifier: Modifier = Modifier) {
                     // The list is re-read rather than patched in place: the server owns
                     // ordering and updatedAt, so asking it again is both simpler and correct.
                     listViewModel.onIntent(NotesListIntent.InvalidateCache)
+
+                    // A successful save ends the editing session, whether the note was newly
+                    // created or already existed, so the editor closes and the list shows the
+                    // result.
+                    //
+                    // This runs only on Saved, which the store emits after the repository has
+                    // confirmed the write. A failed save emits ShowError instead and leaves the
+                    // editor open with the user's text intact, so nothing typed is ever lost to
+                    // a dropped connection.
+                    closeEditor(
+                        onClosed = { isEditorOpen = false },
+                        clearSelection = { listViewModel.onIntent(NotesListIntent.SelectionCleared) },
+                    )
+
                     snackbarHostState.showSnackbar(
                         if (effect.wasCreated) "Note created" else "Note saved",
                     )

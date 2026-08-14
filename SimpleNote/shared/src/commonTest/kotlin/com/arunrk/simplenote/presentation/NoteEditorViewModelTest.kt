@@ -206,6 +206,28 @@ class NoteEditorViewModelTest : ViewModelTest() {
         assertFalse(sut.state.value.hasUnsavedChanges)
     }
 
+    /**
+     * `wasCreated` is what tells the navigation host whether to close the editor: creating
+     * returns the user to the list, editing leaves them where they are. Both halves are pinned
+     * so the two flows cannot quietly converge.
+     */
+    @Test
+    fun `saving an existing note reports that it was not created`() = runTest(testDispatcher) {
+        val repository = FakeNoteRepository(listOf(note(id = 4, title = "Old")))
+        val sut = viewModel(repository)
+        val effects = recordEffects(sut.effects)
+
+        sut.onIntent(NoteEditorIntent.Open(4))
+        advanceUntilIdle()
+        sut.onIntent(NoteEditorIntent.TitleChanged("New"))
+        sut.onIntent(NoteEditorIntent.Save)
+        advanceUntilIdle()
+
+        val saved = effects.ofType<NoteEditorEffect.Saved>().single()
+        assertFalse(saved.wasCreated, "an edit must not be reported as a creation")
+        assertEquals(4L, saved.id)
+    }
+
     @Test
     fun `a validation failure fills in the field errors`() = runTest(testDispatcher) {
         val repository = FakeNoteRepository()

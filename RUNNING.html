@@ -861,6 +861,47 @@ Started NoteBackendApplicationKt in 7.517 seconds</code></pre>
   "timestamp": "2026-08-14T09:53:56.800718400Z"
 }</code></pre>
         </div>
+
+        <h3>Check the app</h3>
+        <p>
+          Three interactions cover the editor, the list and the connection between them.
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Do this</th><th>You should see</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Tap <strong>+</strong>, type a title, tap <strong>Save</strong></td>
+                <td>The editor closes and you are back on the list, with the new note at the top of the unpinned notes.</td>
+              </tr>
+              <tr>
+                <td>Open a note, change the text, tap <strong>Save</strong></td>
+                <td>The editor closes and the list shows the new text with a fresh “updated” timestamp.</td>
+              </tr>
+              <tr>
+                <td>Open a note, change the text, tap <strong>✕</strong></td>
+                <td><em>Discard changes?</em> — choosing <strong>Discard</strong> leaves the note exactly as it was.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note">
+          <p>
+            <strong>Saving always closes the editor</strong>, for a new note and an edited one
+            alike, and only once the server has confirmed the write. If a save fails the editor
+            stays open with your text still in it, so nothing you typed is lost to a dropped
+            connection.
+          </p>
+          <p>
+            The <strong>✕</strong> appears only in the single-pane layout. Above 840dp the list is
+            already beside the editor, so there is nothing to close back to — saving simply clears
+            the right-hand pane.
+          </p>
+        </div>
       </section>
 
       <section id="tests">
@@ -876,7 +917,7 @@ Started NoteBackendApplicationKt in 7.517 seconds</code></pre>
             <button class="copy" type="button">Copy</button>
           </div>
 <pre><code><span class="p">$</span> cd note-backend &amp;&amp; ./gradlew test          <span class="c"># 84 tests</span>
-<span class="p">$</span> cd SimpleNote &amp;&amp; ./gradlew :shared:jvmTest <span class="c"># 108 tests</span></code></pre>
+<span class="p">$</span> cd SimpleNote &amp;&amp; ./gradlew :shared:jvmTest <span class="c"># 109 tests</span></code></pre>
         </div>
 
         <p>
