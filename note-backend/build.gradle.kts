@@ -25,7 +25,13 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-webmvc")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("tools.jackson.module:jackson-module-kotlin")
+	// Both drivers are on the runtime classpath; the JDBC URL scheme picks one.
+	// jdbc:mysql://  -> MySQL 8 (Connector/J)
+	// jdbc:mariadb:// -> MariaDB 10.x, which is what XAMPP ships and labels "MySQL".
+	// Connector/J reads MariaDB's "5.5.5-10.4.x" version prefix as MySQL 5.5.5 and makes
+	// Hibernate generate SQL for a server that old, so MariaDB gets its own driver.
 	runtimeOnly("com.mysql:mysql-connector-j")
+	runtimeOnly("org.mariadb.jdbc:mariadb-java-client:3.5.10")
 	testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-validation-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
