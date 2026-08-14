@@ -4,9 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
 
+/**
+ * The Android entry point.
+ *
+ * Everything the user sees lives in the shared module; this class exists only to host it.
+ * Koin is started in [NoteApplication], not here, so a rotation does not restart it.
+ */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -16,10 +20,4 @@ class MainActivity : ComponentActivity() {
             App()
         }
     }
-}
-
-@Preview
-@Composable
-fun AppAndroidPreview() {
-    App()
 }

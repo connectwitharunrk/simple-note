@@ -17,6 +17,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -53,7 +54,18 @@ fun NotesListScreen(
 ) {
     var pendingDeleteId by remember { mutableStateOf<Long?>(null) }
 
-    Column(modifier = modifier.fillMaxSize()) {
+    // The caller decides how big this screen is; it must not impose its own size. Calling
+    // fillMaxSize() on an already-constrained modifier made the pane wider than the width the
+    // two-pane layout asked for and pushed the floating action button below the visible area.
+    Scaffold(
+        modifier = modifier,
+        floatingActionButton = {
+            FloatingActionButton(onClick = { onIntent(NotesListIntent.CreateNoteRequested) }) {
+                Text("+", style = MaterialTheme.typography.headlineSmall)
+            }
+        },
+    ) { scaffoldPadding ->
+        Column(modifier = Modifier.fillMaxSize().padding(scaffoldPadding)) {
         TopAppBar(
             title = { Text(if (state.filter == NoteFilter.Archived) "Archived" else "Notes") },
             actions = {
@@ -127,14 +139,8 @@ fun NotesListScreen(
                     onDeleteRequested = { pendingDeleteId = it },
                 )
             }
-
-            FloatingActionButton(
-                onClick = { onIntent(NotesListIntent.CreateNoteRequested) },
-                modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
-            ) {
-                Text("+", style = MaterialTheme.typography.headlineSmall)
-            }
         }
+    }
     }
 
     pendingDeleteId?.let { id ->

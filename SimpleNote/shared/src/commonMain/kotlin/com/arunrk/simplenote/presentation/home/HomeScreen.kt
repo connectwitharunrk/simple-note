@@ -144,7 +144,7 @@ fun HomeScreen(modifier: Modifier = Modifier) {
                     NotesListScreen(
                         state = listState,
                         onIntent = listViewModel::onIntent,
-                        modifier = Modifier.width(400.dp),
+                        modifier = Modifier.width(400.dp).fillMaxHeight(),
                         showSelection = true,
                     )
                     VerticalDivider()
@@ -153,6 +153,7 @@ fun HomeScreen(modifier: Modifier = Modifier) {
                             NoteEditorScreen(
                                 state = editorState,
                                 onIntent = editorViewModel::onIntent,
+                                modifier = Modifier.fillMaxSize(),
                                 // Nothing to close back to — the list is already beside it.
                                 showCloseAction = false,
                             )
@@ -166,11 +167,13 @@ fun HomeScreen(modifier: Modifier = Modifier) {
                     NoteEditorScreen(
                         state = editorState,
                         onIntent = editorViewModel::onIntent,
+                        modifier = Modifier.fillMaxSize(),
                     )
                 } else {
                     NotesListScreen(
                         state = listState,
                         onIntent = listViewModel::onIntent,
+                        modifier = Modifier.fillMaxSize(),
                     )
                 }
             }
