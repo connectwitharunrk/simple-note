@@ -45,7 +45,8 @@ fun NoteEditorScreen(
 ) {
     var confirmDelete by remember { mutableStateOf(false) }
 
-    Column(modifier = modifier.fillMaxSize()) {
+    // Sized by the caller, for the same reason as NotesListScreen.
+    Column(modifier = modifier) {
         TopAppBar(
             title = { Text(if (state.isNewNote) "New note" else "Edit note") },
             navigationIcon = {

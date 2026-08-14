@@ -4,5 +4,26 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+
+	<!--
+	  App Transport Security blocks plain HTTP, which would make every request to a local
+	  development backend fail.
+
+	  Only localhost is excepted, rather than setting NSAllowsArbitraryLoads, so HTTPS stays
+	  mandatory for every other host. A physical iPhone reaches a Mac over the LAN rather than
+	  localhost, so testing on a device means adding that address here and passing a matching
+	  baseUrl to initKoin.
+	-->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>localhost</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
 </dict>
 </plist>
