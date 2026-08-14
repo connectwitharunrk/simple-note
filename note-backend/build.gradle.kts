@@ -36,6 +36,10 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-validation-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+	// Thin Kotlin wrapper over the Mockito that the Spring test starters already pull in.
+	// Plain Mockito's argument matchers return null, which does not typecheck against
+	// Kotlin's non-null parameter types.
+	testImplementation("org.mockito.kotlin:mockito-kotlin:6.3.0")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	testRuntimeOnly("com.h2database:h2")
 }
