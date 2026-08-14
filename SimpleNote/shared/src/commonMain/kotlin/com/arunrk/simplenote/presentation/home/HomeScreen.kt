@@ -105,6 +105,21 @@ fun HomeScreen(modifier: Modifier = Modifier) {
                     // The list is re-read rather than patched in place: the server owns
                     // ordering and updatedAt, so asking it again is both simpler and correct.
                     listViewModel.onIntent(NotesListIntent.InvalidateCache)
+
+                    // Creating finishes the job the user asked for, so the editor closes and
+                    // the new note is shown in the list. Without this the editor stays open on
+                    // the note it just saved — and because the store has now adopted a real id,
+                    // it would be showing an *edit* screen for a note the user just wrote.
+                    //
+                    // Editing an existing note deliberately keeps the editor open: the user is
+                    // still working in it and only asked to save.
+                    if (effect.wasCreated) {
+                        closeEditor(
+                            onClosed = { isEditorOpen = false },
+                            clearSelection = { listViewModel.onIntent(NotesListIntent.SelectionCleared) },
+                        )
+                    }
+
                     snackbarHostState.showSnackbar(
                         if (effect.wasCreated) "Note created" else "Note saved",
                     )
